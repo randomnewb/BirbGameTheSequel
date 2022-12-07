@@ -3,24 +3,33 @@ extends KinematicBody2D
 const SlashProjectile = preload("res://Effect/Slash.tscn")
 
 var PlayerStats = ResourceLoader.PlayerStats
+var MainInstances = ResourceLoader.MainInstances
 
 export (int) var ACCELERATION = 500
 export (int) var MAX_SPEED = 80
 export (int) var FRICTION = 500
 
 onready var playerSprite = $Sprite
+onready var attackTimer = $AttackTimer
 
 enum {
 	MOVE,
 	ATTACK,
 }
 
+signal player_died
+
 var state = MOVE
 var velocity = Vector2.ZERO
 var facing = 1
 
 func _ready() -> void:
-	pass # Replace with function body.
+	PlayerStats.connect("player_died", self, "_on_died")
+	MainInstances.Player = self
+
+func queue_free():
+	MainInstances.Player = null
+	.queue_free()
 
 func _physics_process(delta):
 	match state:
@@ -37,7 +46,7 @@ func get_input_vector():
 	input_vector.y = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
 	input_vector = input_vector.normalized()
 	
-	if Input.is_action_just_pressed("attack"):
+	if Input.is_action_just_pressed("attack") and attackTimer.time_left == 0:
 		state = ATTACK
 	
 	return input_vector
@@ -71,7 +80,13 @@ func slash():
 		slash_position = Vector2(global_position.x - 30, global_position.y)
 	var slash = Utils.instance_scene_on_main(SlashProjectile, slash_position)
 	slash.get_node("Sprite").scale.x = -facing
+	attackTimer.start()
 	state = MOVE
 
+func _on_died():
+	emit_signal("player_died")
+	queue_free()
+
 func _on_Hurtbox_hit(damage) -> void:
-	print("Took damage")
+	PlayerStats.health -= damage
+	print("HP", PlayerStats.health)

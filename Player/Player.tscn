@@ -1,10 +1,13 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://Player/player.png" type="Texture" id=1]
 [ext_resource path="res://Player/Player.gd" type="Script" id=2]
 [ext_resource path="res://Collision/Hurtbox.tscn" type="PackedScene" id=3]
 
 [sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 16, 16 )
+
+[sub_resource type="RectangleShape2D" id=2]
 extents = Vector2( 16, 16 )
 
 [node name="Player" type="KinematicBody2D"]
@@ -20,4 +23,13 @@ shape = SubResource( 1 )
 [node name="Hurtbox" parent="." instance=ExtResource( 3 )]
 collision_layer = 4
 
+[node name="Collider" parent="Hurtbox" index="0"]
+shape = SubResource( 2 )
+
+[node name="AttackTimer" type="Timer" parent="."]
+wait_time = 0.25
+one_shot = true
+
 [connection signal="hit" from="Hurtbox" to="." method="_on_Hurtbox_hit"]
+
+[editable path="Hurtbox"]
